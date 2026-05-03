@@ -70,7 +70,7 @@ export async function GET(
             selectedTemplate = fullPath;
             break;
           }
-        } catch (e) {
+        } catch {
           // package.json missing, continue searching
           continue;
         }

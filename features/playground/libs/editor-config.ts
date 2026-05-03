@@ -371,4 +371,4 @@ export const defaultEditorOptions = {
   stickyScroll: {
     enabled: true
   }
-};
+} as const;

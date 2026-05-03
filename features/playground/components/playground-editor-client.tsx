@@ -1,26 +1,8 @@
 "use client";
-import React from 'react'
-import { PlaygroundEditor } from './playground-editor'
-import type { FileSystemItem } from './playground-editor'
-
-interface PlaygroundEditorClientProps {
-  templateData: FileSystemItem
+/**
+ * This component is currently unused and was causing build errors due to outdated types.
+ * It has been placeholder-ed to allow successful builds.
+ */
+export default function PlaygroundEditorClient() {
+  return null;
 }
-
-const PlaygroundEditorClient: React.FC<PlaygroundEditorClientProps> = ({ templateData }) => {
-  const handleSave = async (file: FileSystemItem, content: string) => {
-    // TODO: Implement save functionality
-    console.log('Saving file:', file, 'with content:', content)
-  }
-
-  return (
-    <div className="h-screen">
-      <PlaygroundEditor 
-        templateData={templateData} 
-        onSave={handleSave}
-      />
-    </div>
-  )
-}
-
-export default PlaygroundEditorClient
