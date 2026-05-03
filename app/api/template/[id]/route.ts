@@ -43,10 +43,47 @@ export async function GET(
   }
 
   try {
-    const inputPath = path.join(process.cwd(), templatePath);
+    let inputPath = path.join(process.cwd(), templatePath);
     const outputFile = path.join(process.cwd(), `output/${templateKey}.json`);
 
     console.log("Input Path:", inputPath);
+
+    // Check if requested template exists, fallback to first available if not
+    try {
+      const stats = await fs.stat(inputPath);
+      if (!stats.isDirectory()) throw new Error();
+    } catch {
+      console.warn(`Template directory missing: ${templatePath}. Falling back to first available template.`);
+      const startersDir = path.join(process.cwd(), "vibecode-starters");
+      const entries = await fs.readdir(startersDir, { withFileTypes: true });
+      
+      let selectedTemplate: string | null = null;
+      
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        if (entry.name.startsWith(".")) continue;
+
+        const fullPath = path.join(startersDir, entry.name);
+        try {
+          const pkgStat = await fs.stat(path.join(fullPath, "package.json"));
+          if (pkgStat.isFile()) {
+            selectedTemplate = fullPath;
+            break;
+          }
+        } catch (e) {
+          // package.json missing, continue searching
+          continue;
+        }
+      }
+
+      if (selectedTemplate) {
+        inputPath = selectedTemplate;
+        console.log("Fallback Input Path:", inputPath);
+      } else {
+        throw new Error("No runnable fallback templates available in vibecode-starters");
+      }
+    }
+
     console.log("Output Path:", outputFile);
 
     // Save and read the template structure

@@ -130,40 +130,35 @@ Generate suggestion:`
 async function generateSuggestion(prompt: string): Promise<string> {
   try {
     // Replace this with your actual AI service call
-    const response = await fetch("http://localhost:11434/api/generate", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
-        model: "codellama:latest",
-        prompt,
-        stream: false,
-        options: {
-          temperature: 0.7,
-          max_tokens: 300,
-        },
-      }),
-    })
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7
+      })
+    });
 
     if (!response.ok) {
-      throw new Error(`AI service error: ${response.statusText}`)
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Groq API Error:", JSON.stringify(errorData, null, 2));
+      throw new Error(`AI service error: ${response.statusText}`);
     }
 
-    const data = await response.json()
-    let suggestion = data.response
-
-    // Clean up the suggestion
-    if (suggestion.includes("```")) {
-      const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/)
-      suggestion = codeMatch ? codeMatch[1].trim() : suggestion
-    }
-
-    // Remove cursor markers if present
-    suggestion = suggestion.replace(/\|CURSOR\|/g, "").trim()
-
-    return suggestion
+    const data = await response.json();
+    return data.choices[0].message.content;
   } catch (error) {
-    console.error("AI generation error:", error)
-    return "// AI suggestion unavailable"
+    console.error("AI generation error:", error);
+    throw error;
   }
 }
 

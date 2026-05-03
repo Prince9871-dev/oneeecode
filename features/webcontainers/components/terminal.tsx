@@ -1,10 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Terminal } from "xterm";
-import { FitAddon } from "xterm-addon-fit";
-import { WebLinksAddon } from "xterm-addon-web-links";
-import { SearchAddon } from "xterm-addon-search";
+import dynamic from "next/dynamic";
+import type { Terminal as TerminalType } from "xterm";
+import type { FitAddon as FitAddonType } from "xterm-addon-fit";
+import type { WebLinksAddon as WebLinksAddonType } from "xterm-addon-web-links";
+import type { SearchAddon as SearchAddonType } from "xterm-addon-search";
+
+const Terminal: any = dynamic(
+  () => import("xterm").then(mod => mod.Terminal as any),
+  { ssr: false }
+);
 import "xterm/css/xterm.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,9 +38,9 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
   webContainerInstance
 }, ref) => {
   const terminalRef = useRef<HTMLDivElement>(null);
-  const term = useRef<Terminal | null>(null);
-  const fitAddon = useRef<FitAddon | null>(null);
-  const searchAddon = useRef<SearchAddon | null>(null);
+  const term = useRef<TerminalType | null>(null);
+  const fitAddon = useRef<FitAddonType | null>(null);
+  const searchAddon = useRef<SearchAddonType | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
@@ -271,10 +277,15 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
     }
   }, [executeCommand, writePrompt]);
 
-  const initializeTerminal = useCallback(() => {
+  const initializeTerminal = useCallback(async () => {
     if (!terminalRef.current || term.current) return;
 
-    const terminal = new Terminal({
+    const { Terminal: RealTerminal } = await import("xterm");
+    const { FitAddon } = await import("xterm-addon-fit");
+    const { WebLinksAddon } = await import("xterm-addon-web-links");
+    const { SearchAddon } = await import("xterm-addon-search");
+
+    const terminal = new RealTerminal({
       cursorBlink: true,
       fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", monospace',
       fontSize: 14,
